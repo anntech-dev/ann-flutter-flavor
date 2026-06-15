@@ -20,6 +20,23 @@ dependencies:
 
 ---
 
+## IDE Plugin
+
+The **ANN Flutter Flavor** plugin for Android Studio and IntelliJ IDEA lets you author and validate `annspec.yaml` visually — no need to write YAML by hand.
+
+- **Guided form UI** for flavors, Firebase config, RevenueCat subscriptions, and Google Sign-In keys
+- **Spec validation** highlights missing or invalid fields before you sync
+- **One-click sync** via Tools → ANN Tools → Sync Spec, which calls this package under the hood
+
+**Install:** Open Android Studio → Settings → Plugins → Marketplace → search **"ANN Flutter Flavor"**
+
+> Plugin ID: `dev.anntech.studio.flavorize`  
+> Source: [github.com/anntech-dev/android-studio-plugins](https://github.com/anntech-dev/android-studio-plugins)
+
+Once the plugin generates your `annspec.yaml`, run `dart run ann_flutter_flavor sync` to produce the Dart code and wire Android/iOS.
+
+---
+
 ## Setup
 
 ### 1. Create `annspec.yaml` at the root of your Flutter project
