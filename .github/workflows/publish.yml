@@ -49,6 +49,6 @@ jobs:
 
             ### Links
             - [pub.dev](https://pub.dev/packages/ann_flutter_flavor)
-            - [Changelog](https://github.com/anntech-dev/ann-flutter-flavor/blob/main/CHANGELOG.md)
+            - [Changelog](https://github.com/anntech-dev/ann-flavor-flutter/blob/main/CHANGELOG.md)
           draft: false
           prerelease: false
