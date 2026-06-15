@@ -5,9 +5,9 @@ description: >-
   wires the Gradle plugin for Android, and wires the CocoaPods
   plugin for iOS.
 version: 0.1.0
-homepage: https://github.com/annaibrands/ann_flutter_flavor
-repository: https://github.com/annaibrands/ann_flutter_flavor
-issue_tracker: https://github.com/annaibrands/ann_flutter_flavor/issues
+homepage: https://github.com/annaiappmanager/ann-flutter-flavor
+repository: https://github.com/annaiappmanager/ann-flutter-flavor
+issue_tracker: https://github.com/annaiappmanager/ann-flutter-flavor/issues
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
