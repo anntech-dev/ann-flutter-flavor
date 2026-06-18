@@ -12,7 +12,8 @@ jobs:
   # ── Publish via dart-lang reusable workflow (handles setup, dry-run, publish)
   publish:
     permissions:
-      id-token: write # Required for OIDC authentication
+      id-token: write  # Required for OIDC authentication with pub.dev
+      contents: read   # Required to checkout the private repo
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
 
   # ── Create GitHub Release after publish succeeds ───────────────────────────
