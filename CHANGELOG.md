@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+
+- Version bump across all plugins (gradle 2.0.5, cocoapods 0.1.4, fastlane 0.1.11, studio 1.0.5)
+- Workflow: resolve-versions now syncs README install snippets and studio flavorize fallback version
+- Workflow: switched to ANNTECH_PAT for tag creation (fixes 403 from org-restricted GITHUB_TOKEN)
+
 ## 0.1.5
 
 ### pub.dev quality improvements
