@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.1
+
+**Improved error message** when `annspec.yaml` uses the old `annai_app:` root key (renamed to `app:` in v0.2.0). The CLI now shows a clear hint instead of a Dart type error:
+
+```
+✗ annspec.yaml is missing the required "app:" root key.
+  Hint: rename the root key from "annai_app:" to "app:" — the key was changed in v0.2.0.
+```
+
+## 0.2.1
+
+**`enabled: false` support in validate** — if `annspec.yaml` sets `enabled: false`, the `validate` command now shows a warning at the top explaining that all plugins will ignore the file, while still running full structural validation on the rest of the spec.
+
+**Improved `validate` output** — every error and warning now shows:
+- The exact YAML path where the problem is (e.g. `app.android.flavor.free.stores.google_play.priority`)
+- A precise description of what is wrong
+- A `→` fix hint telling you what to add, change, or remove
+
+Also: parse-time errors (missing `app:` root key, old `annai_app:` key) now print a clear message with a migration hint instead of a raw Dart type error.
+
 ## 0.2.0
 
 **New `summary` command** — print the fully resolved spec before you sync.

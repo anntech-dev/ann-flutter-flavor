@@ -11,6 +11,12 @@ class AnnspecReader {
       throw Exception('annspec.yaml not found at ${file.path}');
     }
     final doc = loadYaml(file.readAsStringSync()) as YamlMap;
+    if (doc['app'] == null) {
+      final hint = doc['annai_app'] != null
+          ? '\n  Hint: rename the root key from "annai_app:" to "app:" — the key was changed in v0.2.0.'
+          : '\n  annspec.yaml must have a top-level "app:" key containing android/ios/web/windows sections.';
+      throw Exception('annspec.yaml is missing the required "app:" root key.$hint');
+    }
     final app = doc['app'] as YamlMap;
     final platforms = <AnnspecPlatform>[];
 
