@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7
+
+### validate command improvements
+- Added checks for: `id` vs `id_suffix` mutual exclusion, `firebase.file` vs `project_id` mutual exclusion, `firebase.file` on iOS, store fields on wrong platform, `google_play.priority` range (1–5), Android-only build_type fields on iOS
+- Added warnings for: missing signing credentials when release is configured, neither `id` nor `id_suffix` set
+- Full error and warning reference documented in `docs/flutter/cli-commands.md`
+
 ## 0.1.6
 
 - Version bump across all plugins (gradle 2.0.5, cocoapods 0.1.4, fastlane 0.1.11, studio 1.0.5)
