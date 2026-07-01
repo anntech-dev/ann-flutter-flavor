@@ -27,8 +27,7 @@ _GradleFile? _resolveGradle(List<String> pathSegments) {
   return null;
 }
 
-/// Ensures the ANN Gradle plugin is wired into the Android project,
-/// and patches defaultConfig with applicationId + minSdk from annspec.yaml.
+/// Ensures the ANN Gradle plugin is wired into the Android project.
 /// Supports both Kotlin DSL (build.gradle.kts) and Groovy DSL (build.gradle).
 class AndroidGenerator {
   static void generate(String projectRoot, [AnnspecModel? spec]) {
@@ -43,7 +42,6 @@ class AndroidGenerator {
     if (spec != null) {
       final android = spec.platform('android');
       if (android != null) {
-        _patchDefaultConfig(androidDir, android);
         _generateFlavorManifests(androidDir, android);
       }
     }
@@ -133,50 +131,6 @@ class AndroidGenerator {
 
     gf.file.writeAsStringSync(content);
     print('  ✓ Patched android/app/$label with ANN Gradle plugin.');
-  }
-
-  // ── defaultConfig: applicationId + minSdk ──────────────────────────────────
-
-  static void _patchDefaultConfig(Directory androidDir, AnnspecPlatform android) {
-    final gf = _resolveGradle([androidDir.path, 'app', 'build.gradle']);
-    if (gf == null) return;
-
-    var content = gf.file.readAsStringSync();
-    var changed = false;
-
-    if (android.baseId != null) {
-      final newId = android.baseId!;
-      // KTS: applicationId = "..."   Groovy: applicationId "..."
-      final pattern = gf.dsl == _GradleDsl.kts
-          ? RegExp(r'applicationId\s*=\s*"[^"]*"')
-          : RegExp(r'''applicationId\s+['"][^'"]*['"]''');
-      final replacement = gf.dsl == _GradleDsl.kts
-          ? 'applicationId = "$newId"'
-          : 'applicationId "$newId"';
-      final updated = content.replaceFirstMapped(pattern, (_) => replacement);
-      if (updated != content) {
-        content = updated; changed = true;
-        print('  ✓ Set defaultConfig.applicationId = "$newId"');
-      }
-    }
-
-    if (android.minSdk != null) {
-      final minSdk = android.minSdk!;
-      // KTS: minSdk = 24   Groovy: minSdkVersion 24
-      final pattern = gf.dsl == _GradleDsl.kts
-          ? RegExp(r'minSdk\s*=\s*\S+')
-          : RegExp(r'minSdkVersion\s+\S+');
-      final replacement = gf.dsl == _GradleDsl.kts
-          ? 'minSdk = $minSdk'
-          : 'minSdkVersion $minSdk';
-      final updated = content.replaceFirstMapped(pattern, (_) => replacement);
-      if (updated != content) {
-        content = updated; changed = true;
-        print('  ✓ Set defaultConfig.minSdk = $minSdk');
-      }
-    }
-
-    if (changed) gf.file.writeAsStringSync(content);
   }
 
   // ── AndroidManifest.xml ────────────────────────────────────────────────────

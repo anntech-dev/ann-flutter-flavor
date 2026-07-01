@@ -40,7 +40,7 @@ class IosGenerator {
       return;
     }
 
-    content = "plugin '$_podPluginName'\n" + content;
+    content = "# Added by ann_flutter_flavor — multi-flavor iOS build configuration\nplugin '$_podPluginName'\n" + content;
     file.writeAsStringSync(content);
     print('  ✓ Patched ios/Podfile with ANN CocoaPods plugin.');
   }

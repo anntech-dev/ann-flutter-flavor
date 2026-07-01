@@ -1,6 +1,40 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.2
+
+**Comments in generated Podfile and Gemfile** — `plugin 'ann-ios-flavorize'` in
+`ios/Podfile` and `gem "ann-flavor-flutter"` in `Gemfile` are now preceded by a
+comment explaining they were added by `ann_flutter_flavor`, making it clear these
+lines should not be removed manually.
+
+**`applicationId` and `minSdk` no longer overwritten** — `sync` no longer rewrites
+`defaultConfig.applicationId` or `minSdk` in `android/app/build.gradle(.kts)`.
+These values are owned by the developer; per-flavor `applicationId` is managed by
+the ANN Gradle plugin at Gradle sync time.
+
+**Firebase script improvements** — `--firebase-mode script` now generates a more
+robust shell script: old generated files are cleaned before re-running, each
+`flutterfire configure` call reports success/failure individually, and a summary
+is printed at the end. The script exits with a non-zero code if any command failed.
+
+**Accurate `flutterfire configure` arguments** — the generated commands (both
+`run` mode and `script` mode) now include `-i`/`-a` (bundle ID) and
+`--ios-build-config` (e.g. `Release-ledger_in`), ensuring flutterfire targets
+the correct registered app and Xcode build configuration in multi-flavor projects.
+
+## 0.4.1
+
+**`service_account` 4-level cascade** — `service_account` can now be placed at
+`default.firebase.service_account` or `flavor.<n>.firebase.service_account` to share
+one key across all build types without repetition. Full cascade (most-specific wins):
+1. `flavor.<n>.build_types.<bt>.firebase.service_account`
+2. `flavor.<n>.firebase.service_account`
+3. `default.build_types.<bt>.firebase.service_account`
+4. `default.firebase.service_account`
+
+---
+
+## 0.4.0
 
 **`--firebase-mode script`** — `sync` accepts `--firebase-mode script` to write
 `lib/generated/scripts/firebase.sh` instead of running `flutterfire configure` inline.
@@ -10,10 +44,6 @@ in a later CI step). The generated script navigates to the project root automati
 **iOS `config_file` guard** — sync now aborts with a clear error when an iOS firebase
 block has `config_file` without `project_id`. iOS must use `project_id` mode; config_file
 is Android-only.
-
----
-
-## 0.4.0
 
 **`sync` pre-flight validation** — `sync` now runs `validate` before generating any
 files. If the spec has errors, sync aborts immediately with exit 1 and no files are
