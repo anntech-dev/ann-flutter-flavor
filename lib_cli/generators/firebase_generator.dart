@@ -183,7 +183,7 @@ class FirebaseGenerator {
 
           cmds.add(_FbCmd(
             projectId:      fb.projectId!,
-            serviceAccount: fb.serviceAccount,
+            serviceAccount: AnnspecModel.resolveServiceAccount(platform, flavor, buildType),
             outFile:        outFile,
             platform:       platformKey,
             label:          '${flavor.key} / $buildType / $platformKey',

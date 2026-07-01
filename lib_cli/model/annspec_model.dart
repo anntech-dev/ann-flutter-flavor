@@ -46,6 +46,9 @@ class AnnspecFlavor {
   final String? gmsAdsId; // resolved: buildType.admob.gms_ads_id ?? flavor.admob.gms_ads_id ?? default.admob.gms_ads_id
   final AnnspecFirebase? firebaseRelease;
   final AnnspecFirebase? firebaseDebug;
+  /// Shared service_account for this flavor, applies to all build types that
+  /// don't set their own. Set via  flavor.<n>.firebase.service_account.
+  final String? flavorServiceAccount;
   final AnnspecAuth? authRelease;
   final AnnspecAuth? authDebug;
   // store fields
@@ -71,6 +74,7 @@ class AnnspecFlavor {
     this.gmsAdsId,
     this.firebaseRelease,
     this.firebaseDebug,
+    this.flavorServiceAccount,
     this.authRelease,
     this.authDebug,
     this.googlePlayPriority,
@@ -102,6 +106,9 @@ class AnnspecPlatform {
   final String? teamId;
   final AnnspecFirebase? defaultFirebaseRelease;
   final AnnspecFirebase? defaultFirebaseDebug;
+  /// Shared service_account for all flavors and build types that don't set
+  /// their own. Set via  default.firebase.service_account.
+  final String? defaultServiceAccount;
   final AnnspecAuth? defaultAuthRelease;
   final AnnspecAuth? defaultAuthDebug;
   final List<AnnspecFlavor> flavors;
@@ -128,6 +135,7 @@ class AnnspecPlatform {
     this.teamId,
     this.defaultFirebaseRelease,
     this.defaultFirebaseDebug,
+    this.defaultServiceAccount,
     this.defaultAuthRelease,
     this.defaultAuthDebug,
     this.flavors = const [],
@@ -150,6 +158,31 @@ class AnnspecModel {
 
   AnnspecPlatform? platform(String key) =>
       platforms.where((p) => p.key == key).firstOrNull;
+
+  /// Resolves service_account for a given platform / flavor / build type using
+  /// a 4-level cascade (most-specific wins):
+  ///   1. flavor.build_types.<bt>.firebase.service_account
+  ///   2. flavor.firebase.service_account
+  ///   3. default.build_types.<bt>.firebase.service_account
+  ///   4. default.firebase.service_account
+  static String? resolveServiceAccount(
+    AnnspecPlatform platform,
+    AnnspecFlavor? flavor,
+    String buildType,
+  ) {
+    final fb = buildType == 'release'
+        ? (flavor?.firebaseRelease ?? platform.defaultFirebaseRelease)
+        : (flavor?.firebaseDebug   ?? platform.defaultFirebaseDebug);
+
+    final defaultFb = buildType == 'release'
+        ? platform.defaultFirebaseRelease
+        : platform.defaultFirebaseDebug;
+
+    return fb?.serviceAccount              // level 1 or 3 (build-type specific)
+        ?? flavor?.flavorServiceAccount    // level 2
+        ?? defaultFb?.serviceAccount       // level 3 when flavor has no bt firebase
+        ?? platform.defaultServiceAccount; // level 4
+  }
 }
 
 class AnnspecIntegrations {

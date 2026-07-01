@@ -159,9 +159,11 @@ class ValidateCommand extends Command<void> {
 
     // Default build_type checks
     _checkFirebase('$basePath.default.build_types.release.firebase',
-        platform.defaultFirebaseRelease, plat, errors, warnings);
+        platform.defaultFirebaseRelease, plat, errors, warnings,
+        resolvedServiceAccount: AnnspecModel.resolveServiceAccount(platform, null, 'release'));
     _checkFirebase('$basePath.default.build_types.debug.firebase',
-        platform.defaultFirebaseDebug,   plat, errors, warnings);
+        platform.defaultFirebaseDebug,   plat, errors, warnings,
+        resolvedServiceAccount: AnnspecModel.resolveServiceAccount(platform, null, 'debug'));
 
     final rawDefault = rawPlatform?['default'] as YamlMap?;
     _checkBuildTypeFields('$basePath.default',
@@ -236,9 +238,11 @@ class ValidateCommand extends Command<void> {
 
     // Firebase checks
     _checkFirebase('$basePath.build_types.release.firebase',
-        flavor.firebaseRelease, plat, errors, warnings);
+        flavor.firebaseRelease, plat, errors, warnings,
+        resolvedServiceAccount: AnnspecModel.resolveServiceAccount(platform, flavor, 'release'));
     _checkFirebase('$basePath.build_types.debug.firebase',
-        flavor.firebaseDebug,   plat, errors, warnings);
+        flavor.firebaseDebug,   plat, errors, warnings,
+        resolvedServiceAccount: AnnspecModel.resolveServiceAccount(platform, flavor, 'debug'));
 
     // Wrong-platform store fields
     if (plat == 'ios') {
@@ -296,8 +300,9 @@ class ValidateCommand extends Command<void> {
     AnnspecFirebase? firebase,
     String platformKey,
     List<_Issue> errors,
-    List<_Issue> warnings,
-  ) {
+    List<_Issue> warnings, {
+    required String? resolvedServiceAccount,
+  }) {
     if (firebase == null) return;
 
     if (firebase.configFile != null && firebase.projectId != null) {
@@ -315,15 +320,16 @@ class ValidateCommand extends Command<void> {
         fix: 'Replace  config_file: "..."  with  project_id: "your-firebase-project-id"',
       ));
     }
-    // project_id mode requires a service_account; without it flutterfire configure will prompt
-    // interactively or fall back to ADC — both violate REQ-FIRE-00100.
-    if (firebase.projectId != null && firebase.serviceAccount == null) {
+    // project_id mode requires a service_account resolved via the 4-level cascade;
+    // without it flutterfire configure will fail (REQ-FIRE-00100).
+    if (firebase.projectId != null && resolvedServiceAccount == null) {
       warnings.add(_Issue(
         path,
         '"project_id" is set but no "service_account" resolves for this build — '
             'flutterfire configure will fail without credentials.',
         fix: 'Add:  service_account: "keys/firebase-sa.json"  '
-            'at default, flavor, or build_type level.',
+            'at default.firebase, default.build_types.<bt>.firebase, '
+            'flavor.firebase, or flavor.build_types.<bt>.firebase level.',
       ));
     }
     // service_account with config_file mode is ineffective — service_account is only used
