@@ -3,15 +3,15 @@ import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 import '../versions.g.dart';
 
-class VersionCommand extends Command<void> {
+class DoctorCommand extends Command<void> {
   @override
-  final name = 'version';
+  final name = 'doctor';
 
   @override
   final description =
-      'Show ann_flutter_flavor version and check all linked plugin versions.';
+      'Show environment health: ann_flutter_flavor version and all linked plugin versions.';
 
-  VersionCommand() {
+  DoctorCommand() {
     argParser.addOption('project', abbr: 'p', defaultsTo: '.');
   }
 

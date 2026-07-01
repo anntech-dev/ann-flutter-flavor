@@ -18,7 +18,7 @@ Add to your Flutter app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ann_flutter_flavor: ^0.3.0
+  ann_flutter_flavor: ^0.4.0
 ```
 
 ---
@@ -139,6 +139,103 @@ AdMob is only applicable to **Android** and **iOS**. Web and Windows have no AdM
 
 ---
 
+## Firebase Setup
+
+### `config_file` vs `project_id`
+
+Firebase configuration uses two different modes depending on the platform:
+
+| Platform | Mode | Field | What happens at sync |
+|----------|------|-------|----------------------|
+| Android | Static file | `config_file` | Copies `google-services.json` to the correct source set |
+| iOS | Dynamic fetch | `project_id` | Runs `flutterfire configure`; generates `firebase_options.dart` |
+| Web | Dynamic fetch | `project_id` | Runs `flutterfire configure`; generates `firebase_options.dart` |
+
+Do **not** set `config_file` on iOS — sync will abort with an error. Do **not** set
+`project_id` on Android — only `config_file` is used there.
+
+### Android: cascade destinations
+
+`google-services.json` is copied to a destination that matches the cascade level at which
+`config_file` is resolved. Android's Gradle plugin reads from the most-specific path it
+finds:
+
+| Cascade level | `google-services.json` destination |
+|---------------|-------------------------------------|
+| `flavor.build_types.<bt>.firebase.config_file` | `android/app/src/{flavor}{BuildType}/google-services.json` |
+| `flavor.build_types.*.firebase.config_file` | `android/app/src/{flavor}/google-services.json` |
+| `default.build_types.<bt>.firebase.config_file` | `android/app/src/{buildType}/google-services.json` |
+| `default.build_types.*.firebase.config_file` | `android/app/google-services.json` |
+
+Example — a single shared `google-services.json` for all flavors and build types:
+
+```yaml
+android:
+  default:
+    build_types:
+      release:
+        firebase:
+          config_file: "keys/firebase/google-services.json"
+      debug:
+        firebase:
+          config_file: "keys/firebase/google-services-dev.json"
+```
+
+### iOS: why no `GoogleService-Info.plist` is needed
+
+In `project_id` mode, `dart run ann_flutter_flavor sync` runs `flutterfire configure`
+which generates per-flavor, per-build-type Dart options files:
+
+```
+lib/generated/firebase/{flavor}_{buildType}_ios_firebase_options.dart
+```
+
+The CocoaPods plugin (`ann-flavor-cocoapods`) reads these files during `pod install` and
+injects `GOOGLE_APP_ID` directly into Xcode build settings. A static
+`GoogleService-Info.plist` in `ios/Runner/` is **not needed** and may cause stale config
+if left in place alongside the generated files.
+
+### Service account setup
+
+`flutterfire configure` requires authentication. The only supported auth method is a
+Firebase service account JSON — no `firebase login`, `gcloud auth`, or ADC.
+
+**Generate the service account:**
+1. Firebase Console → Project Settings → Service accounts
+2. Click **Generate new private key** → download JSON
+3. Store the JSON securely (do not commit it)
+
+**annspec.yaml reference:**
+
+```yaml
+ios:
+  default:
+    build_types:
+      release:
+        firebase:
+          project_id: "my-firebase-prod"
+          service_account: "keys/firebase-sa.json"   # path relative to project root
+      debug:
+        firebase:
+          project_id: "my-firebase-dev"
+          service_account: "keys/firebase-sa-dev.json"
+```
+
+**CI/CD (GitHub Actions) — decode from a base64 secret:**
+
+```yaml
+- name: Decode Firebase service account
+  run: |
+    echo "${{ secrets.FIREBASE_SA_JSON_BASE64 }}" | base64 --decode > keys/firebase-sa.json
+
+- name: Sync spec
+  run: dart run ann_flutter_flavor sync
+```
+
+Encode once locally: `base64 -i firebase-sa.json | pbcopy` then paste as the secret value.
+
+---
+
 ## CLI Commands
 
 ### sync
@@ -146,7 +243,31 @@ AdMob is only applicable to **Android** and **iOS**. Web and Windows have no AdM
 ```bash
 dart run ann_flutter_flavor sync
 dart run ann_flutter_flavor sync -p ../my_flutter_app
+dart run ann_flutter_flavor sync --format json              # machine-readable pre-flight result
+dart run ann_flutter_flavor sync --firebase-mode script     # generate firebase.sh instead of running flutterfire
 ```
+
+Validates `annspec.yaml` first (Step 0). If there are errors, sync aborts and no files
+are written. Warnings are printed but generation continues.
+
+Step order: `[0/6]` validate → `[1/6]` Dart → `[2/6]` Android → `[3/6]` iOS →
+`[4/6]` Firebase → `[5/6]` Fastlane → `[6/6]` Melos.
+
+**`--firebase-mode script`** — writes `lib/generated/scripts/firebase.sh` containing
+all the `flutterfire configure` commands instead of executing them. Use this when
+Firebase auth is not available during sync (e.g. CI environments where the service
+account is injected in a later step):
+
+```bash
+# Sync everything except Firebase:
+dart run ann_flutter_flavor sync --firebase-mode script
+
+# Later, when auth is ready:
+bash lib/generated/scripts/firebase.sh
+```
+
+The generated script navigates to the project root automatically and uses paths relative
+to that root — it can be run from any directory.
 
 What it generates / patches:
 
@@ -168,9 +289,20 @@ What it generates / patches:
 ```bash
 dart run ann_flutter_flavor validate
 dart run ann_flutter_flavor validate -p ../my_flutter_app
+dart run ann_flutter_flavor validate --format json
 ```
 
 Checks `annspec.yaml` for errors and warnings without writing any files. Useful in CI.
+
+### doctor
+
+```bash
+dart run ann_flutter_flavor doctor
+dart run ann_flutter_flavor doctor -p ../my_flutter_app
+```
+
+Shows the `ann_flutter_flavor` version and checks each linked plugin's installed version
+against the expected target version. Exits 1 if any plugin is outdated.
 
 ---
 

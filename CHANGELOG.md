@@ -1,17 +1,81 @@
 # Changelog
 
-## 0.2.1
+## 0.4.0 (unreleased)
 
-**Improved error message** when `annspec.yaml` uses the old `annai_app:` root key (renamed to `app:` in v0.2.0). The CLI now shows a clear hint instead of a Dart type error:
+**`--firebase-mode script`** — `sync` accepts `--firebase-mode script` to write
+`lib/generated/scripts/firebase.sh` instead of running `flutterfire configure` inline.
+Use when Firebase auth is unavailable at sync time (e.g. the service account is decoded
+in a later CI step). The generated script navigates to the project root automatically.
 
-```
-✗ annspec.yaml is missing the required "app:" root key.
-  Hint: rename the root key from "annai_app:" to "app:" — the key was changed in v0.2.0.
-```
+**iOS `config_file` guard** — sync now aborts with a clear error when an iOS firebase
+block has `config_file` without `project_id`. iOS must use `project_id` mode; config_file
+is Android-only.
+
+---
+
+## 0.4.0
+
+**`sync` pre-flight validation** — `sync` now runs `validate` before generating any
+files. If the spec has errors, sync aborts immediately with exit 1 and no files are
+written. Warnings are printed but generation continues.
+
+**Step reorder** — Firebase (`flutterfire configure`) now runs after the fast
+deterministic steps (Dart → Android → iOS) instead of second. New step order:
+`[0]` validate → `[1]` Dart → `[2]` Android → `[3]` iOS → `[4]` Firebase →
+`[5]` Fastlane → `[6]` Melos.
+
+**`--format json`** — `sync` and `validate` accept `--format json` to emit the
+pre-flight result as machine-readable JSON on stdout. All other output goes to stderr.
+Useful for IDE integrations and CI pipelines.
+
+**`doctor` command** — replaces `version`. Shows the `ann_flutter_flavor` version and
+checks each linked plugin's installed version against the expected target. The old
+`version` command has been removed.
+
+**Firebase: `config_file` on iOS is now a hard error** — `sync` exits 1 immediately
+when an iOS firebase block contains `config_file`. iOS must use `project_id` (which
+triggers `flutterfire configure` to generate the options file). See the Firebase Setup
+section in the README for setup guidance.
+
+## 0.3.0
+
+**Firebase service account auth** — `flutterfire configure` now authenticates
+exclusively via the `service_account` field in `annspec.yaml`. ADC (`gcloud auth`) and
+`firebase login` are no longer used or supported. Set `service_account` in your firebase
+block alongside `project_id`; `sync` will warn if `project_id` is set without a
+service account.
+
+**`validate --format json`** — the `validate` command now accepts `--format json`,
+emitting a single JSON object on stdout with all errors and warnings. Exit code 1 when
+any error is present. Used by the Studio plugin (1.1.0) for IDE-integrated validation.
+
+**`version` command** — new command that reads `pubspec.lock`,
+`android/settings.gradle.kts`, and `Gemfile.lock` to compare installed plugin versions
+against expected targets. Exits 1 when any detectable plugin is outdated.
+
+**Firebase validation improvements** — new checks:
+- Error: `firebase.file` key (renamed to `config_file` in 0.1.6) is now a hard error with a migration hint
+- Warning: `project_id` set without a `service_account`
+- Warning: `service_account` set alongside `config_file` (ineffective)
+- Warning: `integrations.firebase: true` set but no firebase blocks configured in spec
+
+## 0.2.5
+
+Internal publish-workflow improvements. No user-facing changes.
+
+## 0.2.4
+
+**120-second timeout on `flutterfire configure`** — prevents sync from hanging
+indefinitely when auth prompts or network issues stall the FlutterFire CLI.
+
+**Signing path resolution** — relative cert/key paths in `credentials.signing` are
+now resolved to absolute paths before being passed to Gradle, preventing build failures
+when `pod install` or `gradle` are invoked from a different working directory.
 
 ## 0.2.2
 
-**Redesigned `summary` command** — output is now organised by flavor × build type, showing fully resolved (cascaded) values for every field:
+**Redesigned `summary` command** — output is now organised by flavor × build type,
+showing fully resolved (cascaded) values for every field:
 
 - Each flavor has a block per build type (`release`, `debug`, …)
 - Every field shown is the effective value after the default → flavor → build type cascade: id, name, version, firebase, auth, admob, stores, custom, and Android build-type flags
@@ -31,62 +95,58 @@ Also: parse-time errors (missing `app:` root key, old `annai_app:` key) now prin
 
 ## 0.2.0
 
-**New `summary` command** — print the fully resolved spec before you sync.
-
-```bash
-dart run ann_flutter_flavor summary
-```
-
-Shows every flavor's effective id, name, version, firebase, auth, admob, stores, and all custom group values — after the default → flavor → build type cascade has been applied. Useful for catching misconfigured cascades early.
+**Breaking: `annai_app:` root key renamed to `app:`** — `annspec.yaml` files using the old
+`annai_app:` root key must be updated. The CLI shows a clear migration hint if the old key
+is detected.
 
 ## 0.1.9
 
-**pub.dev score improvements** — no API or behaviour changes.
-
-- Fixed static analysis errors: `lib_cli/` is now included in the published package so `dart run ann_flutter_flavor` works correctly
-- Shortened package description to meet pub.dev requirements (60–180 characters)
-
-## 0.1.8
-
-**Bug fix:** Running `dart run ann_flutter_flavor` now works correctly when installed from pub.dev.
+Internal pub.dev score improvements (documentation, example, analysis options). No
+user-facing behaviour changes.
 
 ## 0.1.7
 
-**`validate` command is now much more thorough.** It catches common `annspec.yaml` mistakes before they cause a build failure:
-
-- Conflicting `id` and `id_suffix` on the same flavor
-- `firebase.file` and `firebase.project_id` both set at the same time
-- `firebase.file` used on iOS (iOS requires `project_id`)
-- Store configuration on the wrong platform (e.g. `google_play` under iOS, `app_store` under Android)
-- `google_play.priority` set to a value outside the valid range (1–5)
-- Android-specific build options (`minifyEnabled`, `shrinkResources`, NDK settings) placed under an iOS build type
-
-See [CLI Commands](docs/flutter/cli-commands.md) for the full list of errors and warnings.
+**Expanded `validate` command** — comprehensive field-level checks across the entire spec:
+bundle IDs, version formats, firebase mode conflicts, store IDs, signing paths, and
+unknown field detection.
 
 ## 0.1.6
 
-Internal release — dependency and tooling updates only. No API or behaviour changes.
+**`buildType` auto-detection** — `AnnFlavor.buildType` is now derived automatically
+from Dart's `kDebugMode` / `kReleaseMode`. The `buildType` parameter is no longer
+needed in `AnnFlavor.init()`.
 
-## 0.1.5
+**`flutterfire configure` invoked directly during sync** — removes the generated
+`firebase.sh` shell script. Firebase configuration is now driven entirely by the
+`project_id` field in `annspec.yaml`.
 
-- `AnnFlavor.init()` no longer requires passing `buildType` — it is detected automatically at compile time. Remove any `--dart-define=BUILD_TYPE=...` you previously needed.
-- Added a runnable example app under `example/`.
-- Full API documentation on all public classes.
+**Firebase config refactored** — `path`, `firebase_app_id`, and `build_target` fields
+are replaced by two mutually exclusive modes:
+- `config_file` — path to a static `google-services.json` / `GoogleService-Info.plist`
+- `project_id` — runs `flutterfire configure` during sync to generate options files
+
+**Example app added** — a real `flutter create` example with `free` / `pro` flavors
+is included in the package.
 
 ## 0.1.4
 
-**Custom attributes** — define any key-value data in `annspec.yaml` and access it at runtime per flavor and build type.
+**`integrations` block** — new top-level `integrations:` key in `annspec.yaml` with
+`fastlane` and `melos` flags. When enabled:
+- `fastlane: true` — `sync` generates a `Gemfile` wiring the Fastlane plugin
+- `melos: true` — `sync` patches a managed block in `pubspec.yaml` with Melos scripts
 
-- Add a `custom:` block at `default`, `flavor`, or `build_types` level (any platform).
-- Values cascade and deep-merge from default → flavor → build type.
-- Access at runtime via `AnnFlavor.of(context).custom('group_name')` with typed getters: `string()`, `boolean()`, `integer()`, `decimal()`, `strings()`.
+The managed block uses start/end markers so user-authored content outside the block
+is never overwritten.
 
-**Android** — per-flavor `AndroidManifest.xml` is now generated automatically. AdMob metadata is injected when `admob.gms_ads_id` is set.
+## 0.1.3
 
-**iOS** — per-flavor xcconfig files are generated automatically. `Info.plist` is patched to use xcconfig variables for bundle ID, display name, and version.
+Internal publish pipeline improvements (per-plugin tagging, unified workflow). No
+user-facing behaviour changes.
 
-**AdMob** — `gms_ads_id` is now nested under an `admob:` block in the spec (breaking change from 0.1.3).
+## 0.1.2
 
-## 0.1.0
+Internal CI/workflow fix. No user-facing behaviour changes.
 
-Initial release — `sync` and `validate` CLI commands, Android and iOS wiring, and the core runtime API.
+## 0.1.1
+
+Initial release.
