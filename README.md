@@ -18,7 +18,7 @@ Add to your Flutter app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ann_flutter_flavor: ^0.1.0
+  ann_flutter_flavor: ^0.2.5
 ```
 
 ---
@@ -58,14 +58,12 @@ app:
         release:
           firebase:
             project_id: "my-firebase-prod"
-            path: "firebase/android/prod"
           auth:
             clientId: "000000000000-release.apps.googleusercontent.com"
             reversedClientId: "com.googleusercontent.apps.000000000000-release"
         debug:
           firebase:
             project_id: "my-firebase-dev"
-            path: "firebase/android/dev"
       custom:                                       # default-level custom attributes
         revenuecat:
           api_key: "rc_default_key"

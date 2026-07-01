@@ -30,8 +30,9 @@ class AnnspecAuth {
 
 class AnnspecFirebase {
   final String? projectId;
-  final String? file;
-  AnnspecFirebase({this.projectId, this.file});
+  final String? configFile;
+  final String? serviceAccount;
+  AnnspecFirebase({this.projectId, this.configFile, this.serviceAccount});
 }
 
 class AnnspecFlavor {
@@ -154,5 +155,6 @@ class AnnspecModel {
 class AnnspecIntegrations {
   final bool fastlane;
   final bool melos;
-  AnnspecIntegrations({this.fastlane = false, this.melos = false});
+  final bool firebase;
+  AnnspecIntegrations({this.fastlane = false, this.melos = false, this.firebase = false});
 }

@@ -31,6 +31,7 @@ class AnnspecReader {
         ? AnnspecIntegrations(
             fastlane: integrationsMap['fastlane'] as bool? ?? false,
             melos:    integrationsMap['melos']    as bool? ?? false,
+            firebase: integrationsMap['firebase'] as bool? ?? false,
           )
         : null;
 
@@ -147,8 +148,9 @@ class AnnspecReader {
     if (map == null) return null;
     final m = map as YamlMap;
     return AnnspecFirebase(
-      projectId: m['project_id'] as String?,
-      file:      m['file'] as String?,
+      projectId:      m['project_id'] as String?,
+      configFile:     m['config_file'] as String?,
+      serviceAccount: m['service_account'] as String?,
     );
   }
 

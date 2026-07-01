@@ -13,10 +13,10 @@ app:
       build_types:
         release:
           firebase:
-            file: "../firebase/android/prod/google-services.json"
+            config_file: "../firebase/android/prod/google-services.json"
         debug:
           firebase:
-            file: "../firebase/android/dev/google-services.json"
+            config_file: "../firebase/android/dev/google-services.json"
 
     flavor:
       free:
@@ -62,10 +62,10 @@ app:
       build_types:
         release:
           firebase:
-            file: "../firebase/ios/prod/GoogleService-Info.plist"
+            config_file: "../firebase/ios/prod/GoogleService-Info.plist"
         debug:
           firebase:
-            file: "../firebase/ios/dev/GoogleService-Info.plist"
+            config_file: "../firebase/ios/dev/GoogleService-Info.plist"
 
     flavor:
       free:

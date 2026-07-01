@@ -168,7 +168,7 @@ class SummaryCommand extends Command<void> {
 
   void _printFirebase(AnnspecFirebase? fb) {
     if (fb == null) return;
-    if (fb.file != null)      _row('firebase', 'file    → ${fb.file}');
+    if (fb.configFile != null) _row('firebase', 'config_file → ${fb.configFile}');
     if (fb.projectId != null) _row('firebase', 'project → ${fb.projectId}');
   }
 

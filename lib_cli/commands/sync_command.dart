@@ -23,11 +23,19 @@ class SyncCommand extends Command<void> {
       help: 'Path to the Flutter project root.',
       defaultsTo: '.',
     );
+    argParser.addFlag(
+      'silent',
+      abbr: 's',
+      help: 'Skip interactive reauth prompts (used by IDE plugins).',
+      defaultsTo: false,
+      negatable: false,
+    );
   }
 
   @override
   Future<void> run() async {
     final projectRoot = argResults!['project'] as String;
+    final silent = argResults!['silent'] as bool;
 
     print('ANN Flavor — syncing $projectRoot\n');
 
@@ -39,7 +47,7 @@ class SyncCommand extends Command<void> {
     DartGenerator.generate(spec, projectRoot);
 
     print('\n[3/5] Running flutterfire configure (project_id flavors)...');
-    FirebaseGenerator.generate(spec, projectRoot);
+    await FirebaseGenerator.generate(spec, projectRoot, silent: silent);
 
     print('\n[4/5] Wiring Android (Gradle plugin + defaultConfig)...');
     AndroidGenerator.generate(projectRoot, spec);

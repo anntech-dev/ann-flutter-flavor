@@ -263,19 +263,19 @@ class ValidateCommand extends Command<void> {
   ) {
     if (firebase == null) return;
 
-    if (firebase.file != null && firebase.projectId != null) {
+    if (firebase.configFile != null && firebase.projectId != null) {
       errors.add(_Issue(
         path,
-        '"file" and "project_id" are both set — use one, not both.',
-        fix: 'Use "file" (path to google-services.json) on Android, '
+        '"config_file" and "project_id" are both set — use one, not both.',
+        fix: 'Use "config_file" (path to google-services.json) on Android, '
             'or "project_id" (Firebase project ID) on iOS.',
       ));
     }
-    if (platformKey == 'ios' && firebase.file != null) {
+    if (platformKey == 'ios' && firebase.configFile != null) {
       errors.add(_Issue(
         path,
-        '"file" is Android-only — iOS downloads its config via "project_id" at build time.',
-        fix: 'Replace  file: "..."  with  project_id: "your-firebase-project-id"',
+        '"config_file" is Android-only — iOS downloads its config via "project_id" at build time.',
+        fix: 'Replace  config_file: "..."  with  project_id: "your-firebase-project-id"',
       ));
     }
   }

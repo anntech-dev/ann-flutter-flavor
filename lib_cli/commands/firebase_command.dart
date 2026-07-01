@@ -28,6 +28,6 @@ class FirebaseCommand extends Command<void> {
     print('ANN Flavor — running flutterfire configure for $projectRoot');
     final spec = AnnspecReader.read(projectRoot);
 
-    FirebaseGenerator.generate(spec, projectRoot);
+    await FirebaseGenerator.generate(spec, projectRoot);
   }
 }
